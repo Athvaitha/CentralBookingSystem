@@ -37,7 +37,6 @@ export default function Synchronization() {
   // New Feed form
   const [newFeed, setNewFeed] = useState({
     platform: 'Airbnb',
-    roomNumber: '101',
     icalUrl: '',
     syncInterval: '30 minutes',
     isActive: true
@@ -118,10 +117,9 @@ export default function Synchronization() {
     const created = await api.addExternalFeed(newFeed);
     setExternalFeeds(prev => [...prev, created]);
     setIsAddFeedOpen(false);
-    showToast(`External calendar feed for ${created.platform} saved!`, 'success');
+    showToast(`External calendar feed for ${created.platform} saved for all rooms!`, 'success');
     setNewFeed({
       platform: 'Airbnb',
-      roomNumber: '101',
       icalUrl: '',
       syncInterval: '30 minutes',
       isActive: true
@@ -265,7 +263,7 @@ export default function Synchronization() {
             <thead>
               <tr>
                 <th>Platform</th>
-                <th>Mapped Room</th>
+                <th>Target Scope</th>
                 <th>iCal Feed URL</th>
                 <th>Interval</th>
                 <th>Last Sync</th>
@@ -441,10 +439,27 @@ export default function Synchronization() {
         isOpen={isAddFeedOpen}
         onClose={() => setIsAddFeedOpen(false)}
         title="Add External iCal Calendar Feed"
-        subtitle="Subscribe to an external OTA room calendar feed"
+        subtitle="Subscribe to an external OTA property calendar feed"
       >
         <form onSubmit={handleAddFeedSubmit}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{
+              backgroundColor: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              borderRadius: 'var(--radius-md)',
+              padding: '10px 14px',
+              fontSize: '0.82rem',
+              color: '#166534',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <ShieldCheck size={18} color="#16a34a" />
+              <span>
+                <strong>Property-Wide Sync:</strong> This calendar feed will automatically apply and synchronize across <strong>all rooms</strong>. No room selection required.
+              </span>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div className="form-group" style={{ margin: 0 }}>
                 <label className="form-label">Platform Channel</label>
@@ -462,15 +477,16 @@ export default function Synchronization() {
               </div>
 
               <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Map to Room</label>
+                <label className="form-label">Sync Interval</label>
                 <select
                   className="form-select"
-                  value={newFeed.roomNumber}
-                  onChange={(e) => setNewFeed({ ...newFeed, roomNumber: e.target.value })}
+                  value={newFeed.syncInterval}
+                  onChange={(e) => setNewFeed({ ...newFeed, syncInterval: e.target.value })}
                 >
-                  {rooms.map(r => (
-                    <option key={r.number} value={r.number}>Room {r.number}</option>
-                  ))}
+                  <option value="15 minutes">15 minutes</option>
+                  <option value="30 minutes">30 minutes</option>
+                  <option value="1 hour">1 hour</option>
+                  <option value="6 hours">6 hours</option>
                 </select>
               </div>
             </div>
@@ -487,32 +503,16 @@ export default function Synchronization() {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Sync Interval</label>
-                <select
-                  className="form-select"
-                  value={newFeed.syncInterval}
-                  onChange={(e) => setNewFeed({ ...newFeed, syncInterval: e.target.value })}
-                >
-                  <option value="15 minutes">15 minutes</option>
-                  <option value="30 minutes">30 minutes</option>
-                  <option value="1 hour">1 hour</option>
-                  <option value="6 hours">6 hours</option>
-                </select>
-              </div>
-
-              <div className="form-group" style={{ margin: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <label className="form-label">Status</label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
-                  <input
-                    type="checkbox"
-                    checked={newFeed.isActive}
-                    onChange={(e) => setNewFeed({ ...newFeed, isActive: e.target.checked })}
-                  />
-                  <span>Active Synchronization</span>
-                </label>
-              </div>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Status</label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                <input
+                  type="checkbox"
+                  checked={newFeed.isActive}
+                  onChange={(e) => setNewFeed({ ...newFeed, isActive: e.target.checked })}
+                />
+                <span>Active Synchronization</span>
+              </label>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>

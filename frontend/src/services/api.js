@@ -254,8 +254,8 @@ export const api = {
     const newFeed = {
       id: `feed-${Date.now()}`,
       platform: feedData.platform,
-      room: `Room ${feedData.roomNumber}`,
-      roomId: `room-${feedData.roomNumber}`,
+      room: "All Rooms (Property-Wide)",
+      roomId: "all-rooms",
       icalUrl: feedData.icalUrl,
       syncInterval: feedData.syncInterval || "30 minutes",
       isActive: true,

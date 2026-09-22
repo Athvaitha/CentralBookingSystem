@@ -184,8 +184,8 @@ export const initialExternalFeeds = [
   {
     id: "feed-1",
     platform: "Airbnb",
-    room: "Room 101",
-    roomId: "room-101",
+    room: "All Rooms (Property-Wide)",
+    roomId: "all-rooms",
     icalUrl: "https://www.airbnb.com/calendar/ical/8912401.ics?s=cbs_sync_key",
     syncInterval: "30 minutes",
     isActive: true,
@@ -197,8 +197,8 @@ export const initialExternalFeeds = [
   {
     id: "feed-2",
     platform: "Booking.com",
-    room: "Room 203",
-    roomId: "room-203",
+    room: "All Rooms (Property-Wide)",
+    roomId: "all-rooms",
     icalUrl: "https://admin.booking.com/hotel/ical/340912.ics?token=bkg_cbs_token",
     syncInterval: "15 minutes",
     isActive: true,
