@@ -10,7 +10,8 @@ import {
   ArrowUpRight,
   Eye,
   CheckCircle,
-  ExternalLink
+  ExternalLink,
+  Plus
 } from 'lucide-react';
 import StatCard from '../components/common/StatCard';
 import Badge from '../components/common/Badge';
@@ -76,7 +77,33 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Top Control Header with Manual Booking CTA */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px'
+      }}>
+        <div>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
+            Operations Control Center
+          </h2>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
+            Live occupancy & reservation management for Koora Kotta Eco Resort
+          </p>
+        </div>
+        <button
+          className="btn btn-primary"
+          onClick={() => navigate('/bookings')}
+        >
+          <Plus size={16} />
+          + Add Manual Reservation
+        </button>
+      </div>
+
+      {/* 1. Summary KPI Metric Cards */}
       {/* 1. Summary KPI Metric Cards */}
       <div style={{
         display: 'grid',

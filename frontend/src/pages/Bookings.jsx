@@ -38,12 +38,12 @@ export default function Bookings() {
     guestName: '',
     email: '',
     phone: '',
-    roomNumber: '101',
+    roomNumber: 'Hut 101',
     checkIn: '2026-09-30',
     checkOut: '2026-10-02',
     adults: 2,
     children: 0,
-    source: 'Admin / Offline',
+    source: 'Manual / Walk-in',
     notes: ''
   });
 
@@ -63,6 +63,9 @@ export default function Bookings() {
       ]);
       setBookings(b);
       setRooms(r);
+      if (r.length > 0) {
+        setNewBooking(prev => ({ ...prev, roomNumber: r[0].number }));
+      }
     }
     loadData();
   }, [location.search]);
@@ -187,10 +190,12 @@ export default function Bookings() {
               onChange={(e) => setSourceFilter(e.target.value)}
             >
               <option value="ALL">All Sources</option>
+              <option value="Manual / Walk-in">Manual / Walk-in</option>
+              <option value="WhatsApp Direct">WhatsApp Direct</option>
+              <option value="Phone Booking">Phone Booking</option>
+              <option value="Koora Kotta Website">Koora Kotta Website</option>
               <option value="Airbnb">Airbnb</option>
               <option value="Booking.com">Booking.com</option>
-              <option value="Hotel Website">Hotel Website</option>
-              <option value="Admin / Offline">Admin / Offline</option>
             </select>
 
             <select
@@ -399,7 +404,7 @@ export default function Bookings() {
                 >
                   {rooms.map(r => (
                     <option key={r.number} value={r.number}>
-                      Room {r.number} - {r.name} (${r.pricePerNight}/night)
+                      {r.number} - {r.name} (₹{r.pricePerNight}/night)
                     </option>
                   ))}
                 </select>
@@ -536,8 +541,10 @@ export default function Bookings() {
                   value={newBooking.source}
                   onChange={(e) => handleBookingFieldChange('source', e.target.value)}
                 >
-                  <option value="Admin / Offline">Admin / Offline</option>
-                  <option value="Hotel Website">Hotel Website</option>
+                  <option value="Manual / Walk-in">Manual / Walk-in</option>
+                  <option value="WhatsApp Direct">WhatsApp Direct</option>
+                  <option value="Phone Booking">Phone Booking</option>
+                  <option value="Koora Kotta Website">Koora Kotta Website</option>
                   <option value="Airbnb">Airbnb</option>
                   <option value="Booking.com">Booking.com</option>
                 </select>
