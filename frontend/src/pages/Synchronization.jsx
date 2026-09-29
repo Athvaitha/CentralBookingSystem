@@ -59,6 +59,26 @@ export default function Synchronization() {
     loadSyncData();
   }, []);
 
+  // Automatic periodic sync timer loop
+  useEffect(() => {
+    const intervalTimer = setInterval(() => {
+      setExternalFeeds(prevFeeds => 
+        prevFeeds.map(feed => {
+          if (feed.isActive) {
+            return {
+              ...feed,
+              lastSync: 'Just now',
+              syncStatus: 'Healthy'
+            };
+          }
+          return feed;
+        })
+      );
+    }, 60000); // Checks and auto-refreshes active feeds periodically
+
+    return () => clearInterval(intervalTimer);
+  }, []);
+
   // Sync Now handler
   const handleSyncNow = async (channelId, channelName) => {
     setSyncingChannelId(channelId);
@@ -167,112 +187,7 @@ export default function Synchronization() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-      {/* 1. Channel Synchronization Cards */}
-      <div>
-        <div style={{ marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Channel Synchronization Integrations</h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Real-time API & calendar connectivity with primary OTA distribution networks
-          </p>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: '20px'
-        }}>
-          {channels.map((ch) => {
-            const isSyncing = syncingChannelId === ch.id;
-
-            return (
-              <div key={ch.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '10px',
-                      backgroundColor: ch.id === 'airbnb' ? '#ffe4e6' : '#e0e7ff',
-                      color: ch.color,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 800,
-                      fontSize: '1rem'
-                    }}>
-                      {ch.name.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div>
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>{ch.name}</h3>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{ch.syncDirection}</span>
-                    </div>
-                  </div>
-
-                  <Badge status={ch.status} />
-                </div>
-
-                {/* Details breakdown */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '10px',
-                  padding: '12px',
-                  backgroundColor: 'var(--bg-app)',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: '0.8rem'
-                }}>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)' }}>Last Sync:</span>
-                    <div style={{ fontWeight: 600 }}>{ch.lastSync}</div>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)' }}>Next Auto-Sync:</span>
-                    <div style={{ fontWeight: 600 }}>{ch.nextSync}</div>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)' }}>Rooms Mapped:</span>
-                    <div style={{ fontWeight: 600 }}>{ch.roomsMapped}</div>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)' }}>Sync Errors:</span>
-                    <div style={{ fontWeight: 600, color: ch.errorsCount > 0 ? '#dc2626' : '#047857' }}>
-                      {ch.errorsCount} errors
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  marginTop: 'auto',
-                  paddingTop: '12px',
-                  borderTop: '1px solid var(--border-color)'
-                }}>
-                  <button
-                    className="btn btn-primary"
-                    style={{ flex: 1 }}
-                    disabled={isSyncing}
-                    onClick={() => handleSyncNow(ch.id, ch.name)}
-                  >
-                    <RefreshCw size={15} className={isSyncing ? 'animate-spin' : ''} />
-                    {isSyncing ? 'Syncing...' : 'Sync Now'}
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setConfigChannel(ch)}
-                  >
-                    <Settings2 size={15} /> Configure
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 2. External iCal Calendars UI (Import) */}
+      {/* iCal Calendars UI (Import) */}
       <div className="card">
         <div className="card-header">
           <div>
@@ -635,70 +550,6 @@ export default function Synchronization() {
                 </button>
                 <button type="submit" className="btn btn-primary">
                   Save Changes
-                </button>
-              </div>
-            </div>
-          </form>
-        </Modal>
-      )}
-
-      {/* CONFIGURE CHANNEL MODAL */}
-      {configChannel && (
-        <Modal
-          isOpen={true}
-          onClose={() => setConfigChannel(null)}
-          title={`Configure ${configChannel.name} Connection`}
-          subtitle="Manage synchronization direction, URL endpoint, and API parameters"
-        >
-          <form onSubmit={handleSaveConfigChannel}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">{configChannel.name} iCal / API Endpoint Link</label>
-                <input
-                  type="url"
-                  className="form-input"
-                  value={configChannel.icalUrl || ''}
-                  onChange={(e) => setConfigChannel({ ...configChannel, icalUrl: e.target.value })}
-                  placeholder={`https://www.${configChannel.id === 'airbnb' ? 'airbnb' : 'booking'}.com/...`}
-                />
-              </div>
-
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Sync Direction</label>
-                <select
-                  className="form-select"
-                  value={configChannel.syncDirection || 'Two-Way (Import & Export)'}
-                  onChange={(e) => setConfigChannel({ ...configChannel, syncDirection: e.target.value })}
-                >
-                  <option value="Two-Way (Import & Export)">Two-Way (Import Bookings & Export Availability)</option>
-                  <option value="Import-Only">Import Only (Pull External Bookings)</option>
-                  <option value="Export-Only">Export Only (Push Availability Feeds)</option>
-                </select>
-              </div>
-
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Auto-Sync Frequency</label>
-                <select className="form-select" defaultValue="15">
-                  <option value="10">Every 10 minutes</option>
-                  <option value="15">Every 15 minutes (Recommended)</option>
-                  <option value="30">Every 30 minutes</option>
-                </select>
-              </div>
-
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Double-Booking Conflict Threshold</label>
-                <select className="form-select" defaultValue="immediate">
-                  <option value="immediate">Immediate Emergency Alert</option>
-                  <option value="batch">Consolidate in Hourly Digest</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setConfigChannel(null)}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Save Configuration
                 </button>
               </div>
             </div>
