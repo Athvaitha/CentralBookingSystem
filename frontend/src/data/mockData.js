@@ -144,7 +144,8 @@ export const initialChannels = [
     syncDirection: "Two-Way (Import & Export)",
     roomsMapped: "7 / 7 huts",
     errorsCount: 0,
-    color: "#ff385c"
+    color: "#ff385c",
+    icalUrl: "https://www.airbnb.com/calendar/ical/8912401.ics?s=cbs_sync_key"
   },
   {
     id: "booking-com",
@@ -157,20 +158,8 @@ export const initialChannels = [
     syncDirection: "Two-Way (Import & Export)",
     roomsMapped: "7 / 7 huts",
     errorsCount: 0,
-    color: "#003580"
-  },
-  {
-    id: "whatsapp-direct",
-    name: "WhatsApp Direct",
-    logo: "whatsapp",
-    status: "Connected",
-    syncState: "Active",
-    lastSync: "Just now",
-    nextSync: "Realtime",
-    syncDirection: "Inbound Direct",
-    roomsMapped: "7 / 7 huts",
-    errorsCount: 0,
-    color: "#25D366"
+    color: "#003580",
+    icalUrl: "https://admin.booking.com/hotel/ical/340912.ics?token=bkg_cbs_token"
   }
 ];
 

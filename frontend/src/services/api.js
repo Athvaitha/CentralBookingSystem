@@ -375,9 +375,71 @@ export const api = {
     return [...state.channels];
   },
 
+  async updateChannel(id, updatedData) {
+    await delay(200);
+    const idx = state.channels.findIndex(c => c.id === id);
+    if (idx !== -1) {
+      state.channels[idx] = { ...state.channels[idx], ...updatedData };
+      return state.channels[idx];
+    }
+    return null;
+  },
+
   async getExternalFeeds() {
     await delay();
     return [...state.externalFeeds];
+  },
+
+  async addExternalFeed(feedData) {
+    await delay(200);
+    const newFeed = {
+      id: `feed-${Date.now()}`,
+      platform: feedData.platform || 'Airbnb',
+      room: 'All Huts (Koora Kotta Property)',
+      roomId: 'all-rooms',
+      icalUrl: feedData.icalUrl,
+      syncInterval: feedData.syncInterval || '30 minutes',
+      isActive: feedData.isActive !== undefined ? feedData.isActive : true,
+      lastSync: 'Just now',
+      syncStatus: 'Healthy',
+      eventsImported: 0,
+      syncErrors: 0
+    };
+    state.externalFeeds.push(newFeed);
+    return newFeed;
+  },
+
+  async updateExternalFeed(id, updatedData) {
+    await delay(200);
+    const idx = state.externalFeeds.findIndex(f => f.id === id);
+    if (idx !== -1) {
+      state.externalFeeds[idx] = { ...state.externalFeeds[idx], ...updatedData };
+      return state.externalFeeds[idx];
+    }
+    return null;
+  },
+
+  async deleteExternalFeed(id) {
+    await delay(200);
+    state.externalFeeds = state.externalFeeds.filter(f => f.id !== id);
+    return true;
+  },
+
+  async triggerSync(channelId) {
+    await delay(400);
+    const channel = state.channels.find(c => c.id === channelId);
+    if (channel) {
+      channel.lastSync = 'Just now';
+      channel.errorsCount = 0;
+      return { ...channel };
+    }
+    const feed = state.externalFeeds.find(f => f.id === channelId);
+    if (feed) {
+      feed.lastSync = 'Just now';
+      feed.syncStatus = 'Healthy';
+      return { ...feed };
+    }
+    return null;
   },
 
   async getConflicts() {

@@ -14,7 +14,8 @@ import {
   Trash2,
   CalendarDays,
   ShieldCheck,
-  Settings2
+  Settings2,
+  Edit2
 } from 'lucide-react';
 import { api } from '../services/api';
 import Badge from '../components/common/Badge';
@@ -32,7 +33,9 @@ export default function Synchronization() {
 
   // Modals
   const [isAddFeedOpen, setIsAddFeedOpen] = useState(false);
+  const [editFeed, setEditFeed] = useState(null);
   const [configChannel, setConfigChannel] = useState(null);
+  const [editingRoomId, setEditingRoomId] = useState(null);
 
   // New Feed form
   const [newFeed, setNewFeed] = useState({
@@ -124,6 +127,34 @@ export default function Synchronization() {
       syncInterval: '30 minutes',
       isActive: true
     });
+  };
+
+  // Edit external calendar feed
+  const handleEditFeedSubmit = async (e) => {
+    e.preventDefault();
+    if (!editFeed || !editFeed.icalUrl) {
+      showToast("Please provide a valid iCal feed URL", "warning");
+      return;
+    }
+    const updated = await api.updateExternalFeed(editFeed.id, editFeed);
+    setExternalFeeds(prev => prev.map(f => f.id === editFeed.id ? updated : f));
+    setEditFeed(null);
+    showToast(`Updated calendar feed URL for ${updated.platform}!`, 'success');
+  };
+
+  // Save config channel
+  const handleSaveConfigChannel = async (e) => {
+    if (e) e.preventDefault();
+    if (configChannel) {
+      const updated = await api.updateChannel(configChannel.id, configChannel);
+      setChannels(prev => prev.map(c => c.id === configChannel.id ? (updated || configChannel) : c));
+      showToast(`Settings and link for ${configChannel.name} saved!`, 'success');
+      setConfigChannel(null);
+    }
+  };
+
+  const handleRoomUrlChange = (roomId, newUrl) => {
+    setRooms(prev => prev.map(r => r.id === roomId ? { ...r, cbsIcalUrl: newUrl } : r));
   };
 
   const handleDeleteFeed = async (id) => {
@@ -286,16 +317,29 @@ export default function Synchronization() {
                     <strong style={{ color: 'var(--primary)' }}>{feed.room}</strong>
                   </td>
                   <td>
-                    <div style={{
-                      maxWidth: '240px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      fontSize: '0.78rem',
-                      color: 'var(--text-muted)',
-                      fontFamily: 'monospace'
-                    }} title={feed.icalUrl}>
-                      {feed.icalUrl}
+                    <div 
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setEditFeed(feed)}
+                      title="Click to edit iCal URL"
+                    >
+                      <div style={{
+                        maxWidth: '220px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontSize: '0.78rem',
+                        color: 'var(--primary)',
+                        fontFamily: 'monospace',
+                        textDecoration: 'underline'
+                      }}>
+                        {feed.icalUrl}
+                      </div>
+                      <Edit2 size={13} color="var(--primary)" />
                     </div>
                   </td>
                   <td>{feed.syncInterval}</td>
@@ -308,6 +352,13 @@ export default function Synchronization() {
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'inline-flex', gap: '6px' }}>
+                      <button
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => setEditFeed(feed)}
+                        title="Edit iCal Feed Link"
+                      >
+                        <Edit2 size={14} />
+                      </button>
                       <button
                         className="btn btn-sm btn-secondary"
                         onClick={() => handleSyncNow(feed.id, feed.platform)}
@@ -527,50 +578,131 @@ export default function Synchronization() {
         </form>
       </Modal>
 
+      {/* EDIT EXTERNAL CALENDAR MODAL */}
+      {editFeed && (
+        <Modal
+          isOpen={true}
+          onClose={() => setEditFeed(null)}
+          title={`Edit ${editFeed.platform} Calendar Link`}
+          subtitle="Update external iCal synchronization URL and settings"
+        >
+          <form onSubmit={handleEditFeedSubmit}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Platform Channel</label>
+                <select
+                  className="form-select"
+                  value={editFeed.platform}
+                  onChange={(e) => setEditFeed({ ...editFeed, platform: e.target.value })}
+                >
+                  <option value="Airbnb">Airbnb</option>
+                  <option value="Booking.com">Booking.com</option>
+                  <option value="VRBO">VRBO</option>
+                  <option value="TripAdvisor">TripAdvisor</option>
+                  <option value="Other / Custom">Other / Custom</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">External iCal Feed URL *</label>
+                <input
+                  type="url"
+                  required
+                  className="form-input"
+                  value={editFeed.icalUrl}
+                  onChange={(e) => setEditFeed({ ...editFeed, icalUrl: e.target.value })}
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Sync Interval</label>
+                <select
+                  className="form-select"
+                  value={editFeed.syncInterval}
+                  onChange={(e) => setEditFeed({ ...editFeed, syncInterval: e.target.value })}
+                >
+                  <option value="15 minutes">15 minutes</option>
+                  <option value="30 minutes">30 minutes</option>
+                  <option value="1 hour">1 hour</option>
+                  <option value="6 hours">6 hours</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setEditFeed(null)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </form>
+        </Modal>
+      )}
+
       {/* CONFIGURE CHANNEL MODAL */}
       {configChannel && (
         <Modal
           isOpen={true}
           onClose={() => setConfigChannel(null)}
           title={`Configure ${configChannel.name} Connection`}
-          subtitle="Manage synchronization direction and API parameters"
-          footer={
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button className="btn btn-secondary" onClick={() => setConfigChannel(null)}>Cancel</button>
-              <button className="btn btn-primary" onClick={() => {
-                showToast(`Settings for ${configChannel.name} updated!`, 'success');
-                setConfigChannel(null);
-              }}>Save Configuration</button>
-            </div>
-          }
+          subtitle="Manage synchronization direction, URL endpoint, and API parameters"
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label">Sync Direction</label>
-              <select className="form-select" defaultValue="Two-Way">
-                <option value="Two-Way">Two-Way (Import Bookings & Export Availability)</option>
-                <option value="Import-Only">Import Only (Pull External Bookings)</option>
-                <option value="Export-Only">Export Only (Push Availability Feeds)</option>
-              </select>
-            </div>
+          <form onSubmit={handleSaveConfigChannel}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">{configChannel.name} iCal / API Endpoint Link</label>
+                <input
+                  type="url"
+                  className="form-input"
+                  value={configChannel.icalUrl || ''}
+                  onChange={(e) => setConfigChannel({ ...configChannel, icalUrl: e.target.value })}
+                  placeholder={`https://www.${configChannel.id === 'airbnb' ? 'airbnb' : 'booking'}.com/...`}
+                />
+              </div>
 
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label">Auto-Sync Frequency</label>
-              <select className="form-select" defaultValue="15">
-                <option value="10">Every 10 minutes</option>
-                <option value="15">Every 15 minutes (Recommended)</option>
-                <option value="30">Every 30 minutes</option>
-              </select>
-            </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Sync Direction</label>
+                <select
+                  className="form-select"
+                  value={configChannel.syncDirection || 'Two-Way (Import & Export)'}
+                  onChange={(e) => setConfigChannel({ ...configChannel, syncDirection: e.target.value })}
+                >
+                  <option value="Two-Way (Import & Export)">Two-Way (Import Bookings & Export Availability)</option>
+                  <option value="Import-Only">Import Only (Pull External Bookings)</option>
+                  <option value="Export-Only">Export Only (Push Availability Feeds)</option>
+                </select>
+              </div>
 
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label">Double-Booking Conflict Threshold</label>
-              <select className="form-select" defaultValue="immediate">
-                <option value="immediate">Immediate Emergency Alert</option>
-                <option value="batch">Consolidate in Hourly Digest</option>
-              </select>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Auto-Sync Frequency</label>
+                <select className="form-select" defaultValue="15">
+                  <option value="10">Every 10 minutes</option>
+                  <option value="15">Every 15 minutes (Recommended)</option>
+                  <option value="30">Every 30 minutes</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Double-Booking Conflict Threshold</label>
+                <select className="form-select" defaultValue="immediate">
+                  <option value="immediate">Immediate Emergency Alert</option>
+                  <option value="batch">Consolidate in Hourly Digest</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setConfigChannel(null)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Save Configuration
+                </button>
+              </div>
             </div>
-          </div>
+          </form>
         </Modal>
       )}
     </div>
